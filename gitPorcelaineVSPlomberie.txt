@@ -1,0 +1,79 @@
+## 🛠️ Git : Plomberie vs Porcelaine
+
+### 🧠 Métaphore pour commencer :
+
+Imagine Git comme une machine à café industrielle.
+
+* Les **tuyaux internes**, les **pompes**, les **vannes**… c’est la **plomberie** (*plumbing*) : c’est ce qui fait fonctionner la machine **en profondeur**.
+* Les **boutons sur le panneau de commande**, les **lumières** et le **bip de fin** : c’est la **porcelaine** (*porcelain*), c’est ce que l’utilisateur voit et utilise **en surface**.
+
+---
+
+## 🧰 1. **Commandes plomberie (plumbing commands)**
+
+Ce sont les **commandes de bas niveau** que Git utilise en interne. Elles sont précises, puissantes, mais souvent **moins conviviales**.
+
+### ➕ Utilité :
+
+* Pour les scripts automatisés
+* Pour des manipulations très fines du dépôt
+* Pour créer de nouveaux outils autour de Git
+
+### 🔧 Exemples :
+
+* `git hash-object` : calcule le hash d’un fichier
+* `git cat-file` : montre le contenu brut d’un objet Git
+* `git update-index` : modifie l’index directement
+* `git rev-parse` : résout une référence Git (HEAD, branche, etc.)
+
+---
+
+## 🧴 2. **Commandes porcelaine (porcelain commands)**
+
+Ce sont les **commandes de haut niveau**, **faites pour les utilisateurs humains**. Ce sont celles qu’on utilise tous les jours.
+
+### ➕ Utilité :
+
+* Interaction simple et lisible
+* Affichage convivial
+* Messages d’erreur clairs
+
+### 🎯 Exemples :
+
+* `git add`
+* `git commit`
+* `git push`
+* `git status`
+* `git checkout`
+
+> ⚠️ Ces commandes, **en coulisse**, appellent souvent les commandes de plomberie.
+
+---
+
+## 🧩 Résumé visuel :
+
+| Type           | Destinée à...       | Exemples                          | Niveau    |
+| -------------- | ------------------- | --------------------------------- | --------- |
+| **Plomberie**  | Scripts, bas niveau | `git hash-object`, `git cat-file` | Avancé    |
+| **Porcelaine** | Utilisateur humain  | `git commit`, `git status`        | Quotidien |
+
+---
+
+## 📌 Mini quiz pour vérifier 🧠
+
+Choisis **P** pour porcelaine ou **PL** pour plomberie :
+
+1. `git log` → \_\_\_
+2. `git rev-parse` → \_\_\_
+3. `git commit` → \_\_\_
+4. `git cat-file` → \_\_\_
+5. `git push` → \_\_\_
+
+
+
+👉 Donc, git add = git hash-object -w fichier.txt + ajout de l’entrée dans l’index
+
+
+git hash object <file> seul te renvoie juste le hash
+
+git hash object -w <file>  Crée un objet blob dans .git/objects/ à partir du contenu de fichier.txt
