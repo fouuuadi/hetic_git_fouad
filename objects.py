@@ -134,3 +134,8 @@ if __name__ == "__main__":
 # La suite consiste à implémenter la commande `git cat-file` pour lire les objets Git.
 # Cette commande vous permettra de vérifier que les objets que vous avez créés sont corrects.
 # Vous pouvez commencer par créer un fichier `cat_file.py` dans le même répertoire que `objects.py`.
+# Bien je viens de finir cat_file.py, la suite est donc d'implémenter `write-tree`, n'est-ce pas en lien avec create_tree qu'on vient de faire ?
+# Oui, c'est exact ! La commande `write-tree` est en effet liée à la fonction `create_tree` que vous avez déjà implémentée.
+# `write-tree` est utilisée pour créer un objet arbre (tree) à partir des objets Git existants.
+# Vous pouvez utiliser la fonction `create_tree` pour générer l'objet arbre, puis écrire cet objet dans le répertoire `.git/objects`.
+# Vous pouvez créer un fichier `write_tree.py` pour implémenter cette fonctionnalité.
