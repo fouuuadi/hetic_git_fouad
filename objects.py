@@ -113,29 +113,3 @@ if __name__ == "__main__":
         print("L'arbre n'a pas été stocké correctement.")
 
 
-# L'objet blob et l'arbre ont été correctement stockés dans le dépôt Git.
-# Utilisation ultérieure :
-# - Pour ajouter des fichiers, utiliser hash_object avec l'option --write.
-# - Pour créer des arbres, utiliser create_tree avec les entrées appropriées.
-# - Pour lire des objets, utiliser cat-file (à implémenter dans un futur module).
-# - Pour gérer les commits, implémenter une fonction similaire pour les commits.
-# - Pour gérer les références, implémenter une fonction pour écrire dans .git/refs/heads.
-# - Pour gérer les tags, implémenter une fonction pour écrire dans .git/refs/tags.
-# - Pour gérer les branches, implémenter une fonction pour lire et écrire dans .git/refs/heads.
-
-
-# Donc cela fait partie des commandes dites de "plumbing" de Git ?
-# Dans la suite il est indiqué de faire git cat-file, write-tree et commit-tree. Donc je commence par quoi maintenant ?
-# Il est recommandé de commencer par implémenter la commande `git cat-file` pour lire les objets Git,
-# car cela vous permettra de vérifier que les objets que vous avez créés sont corrects. 
-# Ensuite, vous pouvez implémenter `write-tree` pour créer des arbres à partir des objets et
-#  enfin `commit-tree` pour gérer les commits.
-## Bien je viens de créer cat_file.py, quelle est la suite ?
-# La suite consiste à implémenter la commande `git cat-file` pour lire les objets Git.
-# Cette commande vous permettra de vérifier que les objets que vous avez créés sont corrects.
-# Vous pouvez commencer par créer un fichier `cat_file.py` dans le même répertoire que `objects.py`.
-# Bien je viens de finir cat_file.py, la suite est donc d'implémenter `write-tree`, n'est-ce pas en lien avec create_tree qu'on vient de faire ?
-# Oui, c'est exact ! La commande `write-tree` est en effet liée à la fonction `create_tree` que vous avez déjà implémentée.
-# `write-tree` est utilisée pour créer un objet arbre (tree) à partir des objets Git existants.
-# Vous pouvez utiliser la fonction `create_tree` pour générer l'objet arbre, puis écrire cet objet dans le répertoire `.git/objects`.
-# Vous pouvez créer un fichier `write_tree.py` pour implémenter cette fonctionnalité.
