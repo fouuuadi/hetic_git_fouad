@@ -16,18 +16,20 @@ def cat_file(sha1):
     if len(sha1) != 40:
         print(f"Erreur : SHA-1 invalide '{sha1}'. Il doit contenir 40 caractères hexadécimaux.")
         return
-    # Calcul des chemins pour accéder à l'objet
+
     obj_dir = os.path.join(GIT_DIR, "objects", sha1[:2])
     obj_path = os.path.join(obj_dir, sha1[2:])
-    # Vérification de l'existence du fichier
+
     if not os.path.exists(obj_path):
         print(f"Erreur : L'objet '{sha1}' n'existe pas.")
         return
+    
     # Lecture du contenu de l'objet
     with open(obj_path, "rb") as f:
         compressed_data = f.read()
-    # Décompression des données
+
     decompressed_data = zlib.decompress(compressed_data)
+
     # Extraction du type et de la taille
     header, content = decompressed_data.split(b'\x00', 1)
     header_parts = header.split()
