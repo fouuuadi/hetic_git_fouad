@@ -122,3 +122,15 @@ if __name__ == "__main__":
 # - Pour gérer les références, implémenter une fonction pour écrire dans .git/refs/heads.
 # - Pour gérer les tags, implémenter une fonction pour écrire dans .git/refs/tags.
 # - Pour gérer les branches, implémenter une fonction pour lire et écrire dans .git/refs/heads.
+
+
+# Donc cela fait partie des commandes dites de "plumbing" de Git ?
+# Dans la suite il est indiqué de faire git cat-file, write-tree et commit-tree. Donc je commence par quoi maintenant ?
+# Il est recommandé de commencer par implémenter la commande `git cat-file` pour lire les objets Git,
+# car cela vous permettra de vérifier que les objets que vous avez créés sont corrects. 
+# Ensuite, vous pouvez implémenter `write-tree` pour créer des arbres à partir des objets et
+#  enfin `commit-tree` pour gérer les commits.
+## Bien je viens de créer cat_file.py, quelle est la suite ?
+# La suite consiste à implémenter la commande `git cat-file` pour lire les objets Git.
+# Cette commande vous permettra de vérifier que les objets que vous avez créés sont corrects.
+# Vous pouvez commencer par créer un fichier `cat_file.py` dans le même répertoire que `objects.py`.
