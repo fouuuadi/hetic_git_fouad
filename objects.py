@@ -94,10 +94,11 @@ def create_commit(tree_sha1, parent_sha1=None, message="Initial commit"):
         return None
 
 # Vous pouvez l'utiliser pour créer des commits en fournissant le SHA-1 de l'arbre, le SHA-1 du parent (si applicable) et un message de commit.
+# Doit-on ajouter son test dans le bloc `if __name__ == "__main__":` comme pour `hash_object` et `create_tree` ? 
 
 
 
-## Test de la fonction hash_object et de create_tree
+## Test de la fonction hash_object, create_tree et create_commit
 if __name__ == "__main__":
     data = b"Hello, Git!"
     
@@ -146,5 +147,24 @@ if __name__ == "__main__":
         print(f"Arbre stocké correctement à {tree_obj_path}")
     else:
         print("L'arbre n'a pas été stocké correctement.")
+
+    # Test de la création d'un commit avec parent
+    parent_commit_sha1 = create_commit(tree_sha1, message="Parent commit")
+    commit_with_parent_sha1 = create_commit(tree_sha1, parent_sha1=parent_commit_sha1, message="Troisième commit avec parent")
+    print(f"SHA-1 du commit avec parent créé : {commit_with_parent_sha1}")
+    commit_with_parent_obj_path = os.path.join(GIT_DIR, "objects", commit_with_parent_sha1[:2], commit_with_parent_sha1[2:])
+    if os.path.exists(commit_with_parent_obj_path):
+        print(f"Objet commit avec parent stocké correctement à {commit_with_parent_obj_path}")
+    else:
+        print("L'objet commit avec parent n'a pas été stocké correctement.")
+    # Test de la création d'un commit sans parent
+    commit_without_parent_sha1 = create_commit(tree_sha1, message="Premier commit sans parent")
+    print(f"SHA-1 du commit sans parent créé : {commit_without_parent_sha1}")
+    commit_without_parent_obj_path = os.path.join(GIT_DIR, "objects", commit_without_parent_sha1[:2], commit_without_parent_sha1[2:])   
+    if os.path.exists(commit_without_parent_obj_path):
+        print(f"Objet commit sans parent stocké correctement à {commit_without_parent_obj_path}")
+    else:
+        print("L'objet commit sans parent n'a pas été stocké correctement.")
+
 
 
