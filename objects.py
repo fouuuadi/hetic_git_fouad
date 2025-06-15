@@ -63,7 +63,6 @@ def create_tree(entries):
     return sha1
 
 # implémenter la fonction `create_commit` dans `objects.py` pour générer un objet commit, puis l'appeler dans un fichier `commit.py`. 
-# Voici comment vous pourriez procéder avec la même logique que pour `hash_object` et `create_tree` (gestion des erreurs, compression, etc.) :
 def create_commit(tree_sha1, parent_sha1=None, message="Initial commit"):
     try:
         if parent_sha1:
@@ -92,9 +91,6 @@ def create_commit(tree_sha1, parent_sha1=None, message="Initial commit"):
     except Exception as e:
         print(f"Erreur inattendue : {e}")
         return None
-
-# Vous pouvez l'utiliser pour créer des commits en fournissant le SHA-1 de l'arbre, le SHA-1 du parent (si applicable) et un message de commit.
-# Doit-on ajouter son test dans le bloc `if __name__ == "__main__":` comme pour `hash_object` et `create_tree` ? 
 
 
 
@@ -165,6 +161,5 @@ if __name__ == "__main__":
         print(f"Objet commit sans parent stocké correctement à {commit_without_parent_obj_path}")
     else:
         print("L'objet commit sans parent n'a pas été stocké correctement.")
-
 
 
