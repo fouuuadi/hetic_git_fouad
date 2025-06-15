@@ -62,6 +62,41 @@ def create_tree(entries):
     
     return sha1
 
+# implémenter la fonction `create_commit` dans `objects.py` pour générer un objet commit, puis l'appeler dans un fichier `commit.py`. 
+# Voici comment vous pourriez procéder avec la même logique que pour `hash_object` et `create_tree` (gestion des erreurs, compression, etc.) :
+def create_commit(tree_sha1, parent_sha1=None, message="Initial commit"):
+    try:
+        if parent_sha1:
+            commit_content = f"tree {tree_sha1}\nparent {parent_sha1}\n\n{message}".encode()
+        else:
+            commit_content = f"tree {tree_sha1}\n\n{message}".encode()
+        header = f"commit {len(commit_content)}".encode()
+        full_data = header + b'\x00' + commit_content
+        sha1 = hashlib.sha1(full_data).hexdigest()
+        compressed = zlib.compress(full_data)
+        
+        obj_dir = os.path.join(GIT_DIR, "objects", sha1[:2])
+        obj_path = os.path.join(obj_dir, sha1[2:])
+        os.makedirs(obj_dir, exist_ok=True)
+        with open(obj_path, "wb") as f:
+            f.write(compressed)
+
+        return sha1
+    except PermissionError as e:
+        print(f"Erreur de permission : {e}")
+        return None
+    except OSError as e:
+        print(f"Erreur lors de l'écriture de l'objet commit : {e}")
+        return None
+    
+    except Exception as e:
+        print(f"Erreur inattendue : {e}")
+        return None
+
+# Vous pouvez l'utiliser pour créer des commits en fournissant le SHA-1 de l'arbre, le SHA-1 du parent (si applicable) et un message de commit.
+
+
+
 ## Test de la fonction hash_object et de create_tree
 if __name__ == "__main__":
     data = b"Hello, Git!"
