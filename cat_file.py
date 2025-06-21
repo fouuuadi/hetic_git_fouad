@@ -2,7 +2,6 @@
 # avec gestion des erreurs et vérification de la validité du SHA-1.
 import os
 import sys
-import hashlib
 import zlib
 
 GIT_DIR = ".git"
