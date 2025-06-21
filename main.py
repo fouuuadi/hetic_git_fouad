@@ -30,6 +30,23 @@ def main():
           print("Usage: python main.py add <file> [<file>...]")
           return
       add(sys.argv[2:])
+    elif command == 'commit':
+        if '-m' not in sys.argv:
+            print("Usage: python main.py commit -m \"message\"")
+            return
+        msg_index = sys.argv.index('-m') + 1
+        if msg_index >= len(sys.argv):
+            print("Message de commit manquant.")
+            return
+        message = sys.argv[msg_index]
+        from git_scratch import index_to_tree
+        from objects import create_commit
+        tree_sha1 = index_to_tree()
+        commit_sha1 = create_commit(tree_sha1, message=message)
+        if commit_sha1:
+            print(f"Commit créé : {commit_sha1}")
+        else:
+            print("Erreur lors de la création du commit.")
     else:
         print(f"Unknown command: {command}")
 
