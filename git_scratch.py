@@ -104,9 +104,6 @@ def add(files):
     write_index(index)
 
 def index_to_tree():
-    """
-    Construit un objet tree à partir de l'index et retourne son SHA-1.
-    """
     from objects import create_tree
 
     index = read_index()
@@ -118,20 +115,17 @@ def index_to_tree():
     tree_sha1 = create_tree(entries)
     return tree_sha1
 
-def rm(files):
-    """
-    Supprime les fichiers du working directory et de l'index.
-    """
+def rm(files, cached=False):
     index = read_index()
     for file_path in files:
-        # Suppression du fichier sur le disque
-        if os.path.exists(file_path):
+        # Suppression du fichier sur le disque sauf si --cached
+        if not cached and os.path.exists(file_path):
             try:
                 os.remove(file_path)
                 print(f"Supprimé du disque : {file_path}")
             except Exception as e:
                 print(f"Erreur lors de la suppression de {file_path} : {e}")
-        else:
+        elif not cached:
             print(f"Fichier non trouvé sur le disque : {file_path}")
 
         # Suppression de l'index
