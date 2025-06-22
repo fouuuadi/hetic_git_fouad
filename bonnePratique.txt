@@ -1,5 +1,0 @@
-Après avoir réalisé une tâche, essayez de découper votre code pour qu’il soit lisible et compréhensible par les autres.
-
-Ajoutez un maximum de commentaires. Même s’il y en a un à chaque ligne, ce n’est pas grave tant que le code reste compréhensible pour tous.
-
-Essayez de faire des pull requests ; si vous ne voulez pas en faire, laissez simplement votre code sur votre branche, et on verra ensuite pour l’intégrer sur la branche main.
