@@ -117,3 +117,28 @@ def index_to_tree():
         entries.append((mode, name, sha))
     tree_sha1 = create_tree(entries)
     return tree_sha1
+
+def rm(files):
+    """
+    Supprime les fichiers du working directory et de l'index.
+    """
+    index = read_index()
+    for file_path in files:
+        # Suppression du fichier sur le disque
+        if os.path.exists(file_path):
+            try:
+                os.remove(file_path)
+                print(f"Supprimé du disque : {file_path}")
+            except Exception as e:
+                print(f"Erreur lors de la suppression de {file_path} : {e}")
+        else:
+            print(f"Fichier non trouvé sur le disque : {file_path}")
+
+        # Suppression de l'index
+        if file_path in index:
+            del index[file_path]
+            print(f"Supprimé de l'index : {file_path}")
+        else:
+            print(f"Fichier non présent dans l'index : {file_path}")
+
+    write_index(index)
