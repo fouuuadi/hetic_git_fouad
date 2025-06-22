@@ -49,10 +49,15 @@ def main():
             print("Erreur lors de la création du commit.")
     elif command == 'rm':
         if len(sys.argv) < 3:
-            print("Usage: python main.py rm <test.txt> [<test.txt>...]")
+            print("Usage: python main.py rm [--cached] <test.txt> [<test.txt>...]")
             return
         from git_scratch import rm
-        rm(sys.argv[2:])
+        cached = False
+        files = sys.argv[2:]
+        if files[0] == '--cached':
+            cached = True
+            files = files[1:]
+        rm(files, cached=cached)
     else:
         print(f"Unknown command: {command}")
 
