@@ -58,6 +58,9 @@ def main():
             cached = True
             files = files[1:]
         rm(files, cached=cached)
+    elif command == 'log':
+        from log import git_log
+        git_log()
     else:
         print(f"Unknown command: {command}")
 

@@ -22,16 +22,26 @@ def git_log():
         content = read_commit(sha)
         print(f"commit {sha}")
         lines = content.split('\n')
+        author = None
+        date = None
+        parent = None
         for line in lines:
             if line.startswith('tree '):
                 continue
             elif line.startswith('parent '):
                 parent = line.split()[1]
+            elif line.startswith('author '):
+                author = line[len('author '):]
+            elif line.startswith('date '):
+                date = line[len('date '):]
             elif line.strip() == '':
                 msg_index = lines.index(line) + 1
+                if author:
+                    print(f"Author: {author}")
+                if date:
+                    from datetime import datetime
+                    print(f"Date:   {datetime.fromtimestamp(int(date))}")
                 print('\n    ' + '\n    '.join(lines[msg_index:]))
                 break
-        else:
-            parent = None
         print()
-        sha = parent if 'parent' in locals() else None
+        sha = parent

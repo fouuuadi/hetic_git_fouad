@@ -6,6 +6,8 @@ import hashlib
 import os
 import zlib
 import argparse
+import time
+import getpass
 
 
 GIT_DIR = ".git"
@@ -64,6 +66,8 @@ def create_tree(entries):
 
 # implémenter la fonction `create_commit` dans `objects.py` pour générer un objet commit, puis l'appeler dans un fichier `commit.py`. 
 def create_commit(tree_sha1, parent_sha1=None, message="Initial commit"):
+    author = getpass.getuser()
+    date = int(time.time())
     try:
         if parent_sha1:
             commit_content = f"tree {tree_sha1}\nparent {parent_sha1}\n\n{message}".encode()
