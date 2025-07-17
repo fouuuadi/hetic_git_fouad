@@ -1,3 +1,6 @@
 plan.txt
 training.txt
 notes.py
+/.venv
+/.pytest_cache
+/__pycache__

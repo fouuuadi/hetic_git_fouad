@@ -21,7 +21,6 @@ def main():
     command = sys.argv[1]
 
     if command == 'init':
-        # Initialise un dépôt Git (répertoire passé ou courant)
         path = sys.argv[2] if len(sys.argv) > 2 else '.'
         init_repo(path)
     elif command == 'hash-object':

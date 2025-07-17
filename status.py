@@ -1,26 +1,24 @@
-# status.py
-# -*- coding: utf-8 -*-
-"""
-status.py - Implémente la commande `git status` en Python.
-Affiche la branche courante, les changements mis en scène (staged),
-les changements non indexés (unstaged) et les fichiers non suivis.
-"""
-
 import os
 import hashlib
-import fnmatch
+import re
 
 GIT_DIR = ".git"
 
 
 def read_head():
     # Lit .git/HEAD pour obtenir la référence (branche ou SHA)
-    ref = open(os.path.join(GIT_DIR, "HEAD")).read().strip()
+    head_path = os.path.join(GIT_DIR, "HEAD")
+    ref = open(head_path).read().strip()
     if ref.startswith("ref:"):
+        # HEAD pointe vers une branche
         ref_path = ref.split()[1]
-        # Retourne le SHA de la branche courante
-        return open(os.path.join(GIT_DIR, ref_path)).read().strip()
-    # HEAD détaché : retour direct du SHA
+        ref_file = os.path.join(GIT_DIR, ref_path)
+        try:
+            return open(ref_file).read().strip()
+        except FileNotFoundError:
+            # Aucune validation encore : retourne le nom de la branche
+            return ref_path.split('/')[-1]
+    # HEAD détaché : retourne le SHA
     return ref
 
 
@@ -32,126 +30,64 @@ def hash_file(path):
     return hashlib.sha1(header + data).hexdigest()
 
 
-def load_index():
-    """
-    Charge l'index Git sous forme de dict {chemin: blob_sha}.
-    Pour l'instant, on utilise `git ls-files -s` en attendant un parser binaire.
-    """
-    index = {}
-    lines = os.popen(f"git --git-dir={GIT_DIR} ls-files -s").read().splitlines()
-    for line in lines:
-        parts = line.split()
-        blob_sha = parts[1]
-        path = parts[3]
-        index[path] = blob_sha
-    return index
-
-
 def ls_tree(tree_sha):
-    """
-    Liste récursivement le contenu d'un arbre Git (tree) donné.
-    Retourne un dict {chemin: blob_sha}.
-    """
+    # Liste récursivement le contenu d'un arbre Git (tree)
     tree = {}
-    lines = os.popen(f"git --git-dir={GIT_DIR} ls-tree -r {tree_sha}").read().splitlines()
-    for line in lines:
+    output = os.popen(f"git --git-dir={GIT_DIR} ls-tree -r {tree_sha}").read().splitlines()
+    for line in output:
         parts = line.split()
-        blob_sha = parts[2]
+        sha = parts[2]
         path = parts[3]
-        tree[path] = blob_sha
+        tree[path] = sha
     return tree
 
 
-def load_gitignore():
-    # Charge les patterns de .gitignore (simplifié)
-    patterns = []
-    try:
-        with open('.gitignore') as f:
-            for line in f:
-                line = line.strip()
-                if line and not line.startswith('#'):
-                    patterns.append(line)
-    except FileNotFoundError:
-        pass
-    return patterns
-
-
-def is_ignored(path, patterns):
-    # Vérifie qu'un chemin matche un pattern de .gitignore
-    for pat in patterns:
-        if fnmatch.fnmatch(path, pat):
-            return True
-    return False
-
-
 def git_status():
-    """
-    Affiche l'état du dépôt :
-    - branche courante
-    - changements staged vs HEAD
-    - changements unstaged vs index
-    - fichiers non suivis
-    """
     # 1. Branche / HEAD
-    head_sha = read_head()
-    print(f"Sur la branche {head_sha[:7]}")
+    head = read_head()
+    print(f"Sur la branche {head[:7]}")
 
-    # 2. Arbre HEAD
-    commit_info = os.popen(f"git --git-dir={GIT_DIR} cat-file -p {head_sha}").read()
+    # Si pas de commit (head non-SHA1 long), on arrête là
+    if not re.fullmatch(r"[0-9a-f]{40}", head):
+        return
+
+    # 2. Arbre de HEAD
+    commit_info = os.popen(f"git --git-dir={GIT_DIR} cat-file -p {head}").read()
     tree_sha = [l.split()[1] for l in commit_info.splitlines() if l.startswith('tree')][0]
     head_tree = ls_tree(tree_sha)
 
-    # 3. Index
-    index = load_index()
-
-    # 4. Staged changes (index vs HEAD)
-    staged_new, staged_mod, staged_del = [], [], []
-    for path, sha in index.items():
-        if path not in head_tree:
-            staged_new.append(path)
-        elif head_tree[path] != sha:
-            staged_mod.append(path)
-    for path in head_tree:
-        if path not in index:
-            staged_del.append(path)
-    if staged_new or staged_mod or staged_del:
-        print("\nModifications prêtes à être validées :")
-        for p in staged_new:
-            print(f"  nouveau fichier : {p}")
-        for p in staged_mod:
-            print(f"  modifié         : {p}")
-        for p in staged_del:
-            print(f"  supprimé        : {p}")
-
-    # 5. Unstaged changes (working tree vs index)
-    unstaged_mod, unstaged_del = [], []
-    for path, sha in index.items():
-        if not os.path.exists(path):
-            unstaged_del.append(path)
-        else:
-            current_sha = hash_file(path)
-            if current_sha != sha:
-                unstaged_mod.append(path)
-    if unstaged_mod or unstaged_del:
-        print("\nModifications non indexées :")
-        for p in unstaged_mod:
-            print(f"  modifié         : {p}")
-        for p in unstaged_del:
-            print(f"  supprimé        : {p}")
-
-    # 6. Fichiers non suivis
-    patterns = load_gitignore()
+    # 3. Fichiers du working tree
     work_files = []
     for root, dirs, files in os.walk('.'):
+        # Ignorer le dossier .git
         dirs[:] = [d for d in dirs if d != GIT_DIR]
         for f in files:
-            rel_path = os.path.join(root, f).lstrip('./')
-            work_files.append(rel_path)
-    untracked = [f for f in work_files if f not in index and not is_ignored(f, patterns)]
-    if untracked:
-        print("\nFichiers non suivis :")
-        for p in untracked:
-            print(f"  {p}")
+            full = os.path.join(root, f)
+            rel = os.path.relpath(full, '.')
+            # Uniformiser les séparateurs en '/'
+            rel = rel.replace(os.sep, '/')
+            work_files.append(rel)
+
+    # 4. Détecter les nouveaux fichiers
+    new_files = [f for f in work_files if f not in head_tree]
+    # 5. Détecter les suppressions
+    removed = [f for f in head_tree if f not in work_files]
+    # 6. Détecter les modifications
+    modified = [f for f in work_files
+                if f in head_tree and hash_file(f) != head_tree[f]]
+
+    # Affichage
+    if new_files or modified:
+        print("\nModifications prêtes à être validées :")
+        for f in new_files:
+            print(f"  nouveau fichier : {f}")
+        for f in modified:
+            print(f"  modifié         : {f}")
+
+    if removed:
+        print("\nModifications non indexées :")
+        for f in removed:
+            print(f"  supprimé        : {f}")
 
 
 if __name__ == "__main__":
