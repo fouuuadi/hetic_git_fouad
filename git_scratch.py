@@ -89,6 +89,41 @@ def write_index(index):
     with open(INDEX_PATH, 'w') as f:
         json.dump(index, f, indent=2)
 
+
+def add(paths):
+    index = read_index()
+    files_to_add = []
+
+    for path in paths:
+        if os.path.isfile(path):
+            files_to_add.append(path)
+        elif os.path.isdir(path):
+            for root, _, files in os.walk(path):
+                if os.path.commonpath([root, '.git']) == '.git':
+                    continue
+                for file in files:
+                    full_path = os.path.join(root, file)
+                    files_to_add.append(full_path)
+        else:
+            print(f"Skipped (not a file or directory): {path}")
+            continue
+
+    for file_path in files_to_add:
+        relative_path = os.path.relpath(file_path, start=os.getcwd())
+        if relative_path in index:
+            print(f"Skipped (already added): {relative_path}")
+            continue
+
+        sha = hash_object(file_path)
+        index[file_path] = sha
+        print(f"Added {file_path}")
+
+    write_index(index)
+
+
+
+
+
 # def add(files):
 #     index = read_index()
 
@@ -102,31 +137,3 @@ def write_index(index):
 #         print(f"Added {file_path}")
 
 #     write_index(index)
-
-def add(paths):
-    index = read_index()
-    files_to_add = []
-
-    for path in paths:
-        if os.path.isfile(path):
-            files_to_add.append(path)
-        elif os.path.isdir(path):
-            for root, _, files in os.walk(path):
-                for file in files:
-                    full_path = os.path.join(root, file)
-                    files_to_add.append(full_path)
-        else:
-            print(f"Skipped (not a file or directory): {path}")
-            continue
-
-    for file_path in files_to_add:
-        relative_path = os.path.relpath(file_path, start=os.getcwd())
-        if relative_path in index:
-            print(f"Skipped (already added): {relative_path}")
-            continue
-        
-        sha = hash_object(file_path)
-        index[file_path] = sha
-        print(f"Added {file_path}")
-
-    write_index(index)
