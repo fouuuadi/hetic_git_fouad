@@ -1,0 +1,114 @@
+import os
+import json
+import hashlib
+
+# Assurez-vous que ces chemins sont définis au début de votre script
+# Exemple de structure: .mygit/objects et .mygit/index.json
+REPO_ROOT = "." # Ou le chemin de votre dépôt
+GIT_DIR = os.path.join(REPO_ROOT, ".mygit")
+OBJECTS_DIR = os.path.join(GIT_DIR, "objects")
+INDEX_PATH = os.path.join(GIT_DIR, "index.json")
+
+
+def read_index():
+    if os.path.exists(INDEX_PATH):
+        with open(INDEX_PATH, 'r') as f:
+            return json.load(f)
+    return {}
+
+def write_index(index):
+    # S'assurer que le répertoire de l'index existe
+    os.makedirs(os.path.dirname(INDEX_PATH), exist_ok=True)
+    with open(INDEX_PATH, 'w') as f:
+        json.dump(index, f, indent=2)
+
+def hash_object(file_path):
+    """
+    Lit un fichier, calcule son hachage SHA-1, stocke le contenu
+    dans le répertoire des objets et retourne le hachage.
+    """
+    with open(file_path, 'rb') as f: # Ouvrir en mode binaire
+        data = f.read()
+
+    sha1_hash = hashlib.sha1(data).hexdigest()
+
+    # Créer le chemin de l'objet (par exemple, .mygit/objects/xx/xxxxxxxx...)
+    object_dir = os.path.join(OBJECTS_DIR, sha1_hash[:2])
+    object_path = os.path.join(object_dir, sha1_hash[2:])
+
+    os.makedirs(object_dir, exist_ok=True) # S'assurer que le répertoire existe
+
+    # Écrire le contenu du fichier dans l'objet
+    with open(object_path, 'wb') as f_obj:
+        f_obj.write(data)
+
+    return sha1_hash
+
+def add(paths): # Renommé 'files' en 'paths' car peut contenir des fichiers ou des dossiers
+    index = read_index()
+    files_to_add = []
+
+    # Parcourir les chemins fournis et déterminer s'ils sont des fichiers ou des répertoires
+    for path in paths:
+        if os.path.isfile(path):
+            files_to_add.append(path)
+        elif os.path.isdir(path):
+            for root, _, files in os.walk(path):
+                for file in files:
+                    full_path = os.path.join(root, file)
+                    # Optionnel: Gérer les fichiers ignorés ici (similaire à .gitignore)
+                    files_to_add.append(full_path)
+        else:
+            print(f"Skipped (not a file or directory): {path}")
+            continue
+
+    for file_path in files_to_add:
+        # S'assurer que le chemin est relatif à la racine du dépôt pour l'index
+        # C'est crucial pour que l'index soit portable
+        relative_file_path = os.path.relpath(file_path, REPO_ROOT)
+
+        # Optionnel: Vérifier si le fichier existe et n'est pas un lien symbolique cassé, etc.
+        if not os.path.exists(file_path) or not os.path.isfile(file_path):
+             print(f"Skipped (not a regular file): {file_path}")
+             continue
+
+        sha = hash_object(file_path)
+        index[relative_file_path] = sha # Stocker le chemin relatif et le hachage
+        print(f"Added {relative_file_path}")
+
+    write_index(index)
+
+# --- Exemple d'utilisation ---
+if _name_ == "_main_":
+    # Assurez-vous que le répertoire .mygit existe pour les tests
+    if not os.path.exists(GIT_DIR):
+        os.makedirs(GIT_DIR)
+
+    # Créez quelques fichiers pour tester
+    with open("test_file_1.txt", "w") as f:
+        f.write("Ceci est le fichier 1.")
+    os.makedirs("test_dir", exist_ok=True)
+    with open("test_dir/test_file_2.txt", "w") as f:
+        f.write("Ceci est le fichier 2 dans un répertoire.")
+
+    print("--- Ajout de test_file_1.txt ---")
+    add(["test_file_1.txt"])
+    print("\nIndex après ajout fichier 1:")
+    print(read_index())
+
+    print("\n--- Ajout de test_dir/ ---")
+    add(["test_dir"])
+    print("\nIndex après ajout répertoire:")
+    print(read_index())
+
+    print("\n--- Ajout de tout le répertoire courant (.) ---")
+    add(["."]) # Simule 'git add .'
+    print("\nIndex après ajout de tout:")
+    print(read_index())
+
+    # Nettoyage (optionnel)
+    # os.remove("test_file_1.txt")
+    # os.remove("test_dir/test_file_2.txt")
+    # os.rmdir("test_dir")
+    # import shutil
+    # shutil.rmtree(GIT_DIR)
