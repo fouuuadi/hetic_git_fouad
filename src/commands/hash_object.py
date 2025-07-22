@@ -1,6 +1,6 @@
 import hashlib, zlib, os
 
-def hash_object_git(file, write=False):
+def hash_object_git(file, write=True):
     try:
         with open(file, "rb") as f:
             content = f.read()
