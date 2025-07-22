@@ -16,7 +16,6 @@ if __name__ == "__main__":
         print("Échec de la création de l'objet tree.")
 
 
-# à utiliser pour créer un objet tree dans un dépôt Git 
 
 
 
