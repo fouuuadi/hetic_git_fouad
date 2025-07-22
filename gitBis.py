@@ -1,9 +1,13 @@
 import argparse
 from src.commands.hash_object import hash_object_git
+from src.commands.init import init
 
 def main():
     parser = argparse.ArgumentParser(prog="gitBis", description="Mini Git en python", epilog="Merci d'utiliser gitBis !")
     subparsers = parser.add_subparsers(dest="command", required=True, help="Commandes disponibles")
+
+    # Sous-commande : init
+    parser_init = subparsers.add_parser("init", help="Initialiser un nouveau dépôt Git")
 
     # Sous-commande : hash-object
     parser_hash = subparsers.add_parser("hash-object", help="Calculer le hash d'un fichier")
@@ -12,7 +16,9 @@ def main():
 
     args = parser.parse_args()
 
-    if args.command == "hash-object":
+    if args.command == "init":
+        init()
+    elif args.command == "hash-object":
         try:
             result = hash_object_git(args.file, write=args.write)
             if result:
