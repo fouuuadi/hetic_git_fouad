@@ -1,5 +1,5 @@
 import argparse
-from src.commands.hash_object_cmd import handle_hash_object
+from src.commands.hash_object import hash_object_git
 
 parser = argparse.ArgumentParser(prog="gitBis", description="Mini Git en python", epilog="Merci d'utiliser gitBis !")
 subparsers = parser.add_subparsers(dest="command", required=True, help="Commandes disponibles")
@@ -12,6 +12,13 @@ parser_hash.add_argument("-w", "--write", action="store_true", help="Écrire l'o
 args = parser.parse_args()
 
 if args.command == "hash-object":
-    handle_hash_object(args)
+    try:
+        result = hash_object_git(args.file, write=args.write)
+        if result:
+            print(f"Hash SHA-1 de '{args.file}': {result}")
+        else:
+            print("Erreur lors du hash ou de l'écriture.")
+    except Exception as e:
+        print(f"Erreur: {e}")
 else:
     print("Commande non reconnue. Utilisez --help pour voir les options disponibles.")

@@ -31,4 +31,4 @@ def hash_object_git(file, write=False):
         except Exception as e:
             print(f"Erreur lors de l'écriture : {e}")
             return None
-    return sha1
+    return sha1 
