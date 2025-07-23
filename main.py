@@ -1,5 +1,5 @@
 import sys
-from git_scratch import init_repo, hash_object, cat_file, add
+from git_scratch import init_repo, hash_object, cat_file, add, write_tree, ls_files, ls_tree
 
 def main():
     if len(sys.argv) < 2:
@@ -30,6 +30,16 @@ def main():
           print("Usage: python main.py add <file> [<file>...]")
           return
       add(sys.argv[2:])
+    elif command == 'ls-tree':
+        if len(sys.argv) != 3:
+            print("Usage: python main.py ls-tree <sha>")
+            return
+        sha = sys.argv[2]
+        ls_tree(sha)
+    elif command ==  'ls-files':
+        ls_files()
+    elif command == 'write-tree':
+        write_tree()
     else:
         print(f"Unknown command: {command}")
 

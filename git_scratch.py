@@ -2,6 +2,7 @@ import os
 import hashlib
 import zlib
 import json
+import struct
 
 INDEX_PATH = os.path.join('.git', 'index.json')
 
@@ -121,19 +122,73 @@ def add(paths):
     write_index(index)
 
 
+#command git ls-tree
+
+def ls_tree(sha):
+    obj_type, content = read_object(sha)
+    if obj_type != 'tree':
+        raise ValueError(f"Object {sha} is not a tree.")
+
+    i = 0
+    while i < len(content):
+        # Lire le mode (ex: 100644), suivi d’un espace
+        space_index = content.index(b' ', i)
+        mode = content[i:space_index].decode()
+        i = space_index + 1
+
+        # Lire le nom du fichier, suivi de \0
+        null_index = content.index(b'\x00', i)
+        name = content[i:null_index].decode()
+        i = null_index + 1
+
+        # Lire les 20 bytes du SHA-1 (binaire)
+        sha_bin = content[i:i+20]
+        sha_hex = sha_bin.hex()
+        i += 20
+
+        print(f"{mode} {sha_hex} {name}")
 
 
 
-# def add(files):
-#     index = read_index()
 
-#     for file_path in files:
-#         if not os.path.isfile(file_path):
-#             print(f"Skipped (not a file): {file_path}")
-#             continue
 
-#         sha = hash_object(file_path)
-#         index[file_path] = sha
-#         print(f"Added {file_path}")
 
-#     write_index(index)
+#comment ls-files
+def ls_files(verbose=False):
+    index = read_index()
+    for file_path in sorted(index.keys()):
+        if verbose:
+            print(f"{index[file_path]} {file_path}")
+        else:
+            print(file_path)
+
+#command write-tree
+def write_tree():
+    index = read_index()
+    entries = []
+
+    for path, sha in index.items():
+        mode = '100644'  # On simplifie : tout est fichier normal
+    
+        path = path.replace(os.sep, '/')
+        name = path.encode()
+        sha_bytes = bytes.fromhex(sha)
+        entry = f"{mode} ".encode() + name + b'\x00' + sha_bytes
+        entries.append(entry)
+
+    content = b''.join(entries)
+    header = f"tree {len(content)}\0".encode()
+    store = header + content
+
+    sha1 = hashlib.sha1(store).hexdigest()
+
+    # Sauvegarder dans .git/objects
+    object_path = os.path.join('.git', 'objects', sha1[:2], sha1[2:])
+    dir_path = os.path.dirname(object_path)
+    os.makedirs(dir_path, exist_ok=True)
+
+    with open(object_path, 'wb') as f:
+        f.write(zlib.compress(store))
+
+    print(sha1)
+    return sha1
