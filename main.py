@@ -1,7 +1,7 @@
 import sys
 from git_scratch import init_repo, hash_object, cat_file, add
 import status
-
+import show_ref    # pour la nouvelle commande show-ref
 
 def main():
     # Affichage de l'aide si aucune commande n'est fournie
@@ -16,6 +16,7 @@ def main():
         print("  rm [--cached] <file> [<file>...]")
         print("  log")
         print("  status")
+        print("  show-ref")     # ajouté
         return
 
     command = sys.argv[1]
@@ -77,6 +78,10 @@ def main():
     elif command == 'status':
         # Nouvelle commande pour afficher l'état du dépôt
         status.git_status()
+
+    elif command == 'show-ref':
+        # Liste toutes les refs et leurs SHA
+        show_ref.git_show_ref()
 
     else:
         print(f"Unknown command: {command}")
