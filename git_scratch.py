@@ -2,7 +2,6 @@ import os
 import hashlib
 import zlib
 import json
-import struct
 
 INDEX_PATH = os.path.join('.git', 'index.json')
 
@@ -147,10 +146,6 @@ def ls_tree(sha):
         i += 20
 
         print(f"{mode} {sha_hex} {name}")
-
-
-
-
 
 
 #comment ls-files
