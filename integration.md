@@ -4,7 +4,7 @@ fichier realiser par fouad
 
 Ce document liste, étape par étape, les commandes Git à intégrer successivement pour comprendre et tester les différentes fonctionnalités de Git.
 
-1. **Initialiser un dépôt**
+1. **Initialiser un dépôt** OK 🟢🟢🟢🟢🟢🟢
 
    ```bash
    git init [<dir>]

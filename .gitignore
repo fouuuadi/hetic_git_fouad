@@ -1,7 +1,5 @@
-__pycache__/
-*.pyc
-*.pyo
 *.log
-.venv/
-.git/
-test.txt
+*.log
+*.tmp
+*.pyc
+__pycache__/
