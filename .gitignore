@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 __pycache__/
 *.pyc
 *.pyo
@@ -5,3 +6,10 @@ __pycache__/
 .venv/
 .git/
 test.txt
+=======
+*.log
+*.log
+*.tmp
+*.pyc
+__pycache__/
+>>>>>>> efbd81f (commande integre 8/17)

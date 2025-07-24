@@ -1,6 +1,6 @@
 import hashlib, zlib, os
 
-def hash_object_git(file, write=True):
+def hash_object_git(file, write=False):
     try:
         with open(file, "rb") as f:
             content = f.read()
@@ -18,11 +18,11 @@ def hash_object_git(file, write=True):
     compressed = zlib.compress(data)
 
     if write:
-        if not os.path.isdir(".git"):
-            print("Erreur : ce répertoire n'est pas un dépôt Git ('.git' manquant).")
+        if not os.path.isdir(".mon_git"):
+            print("Erreur : ce répertoire n'est pas un dépôt Git ('.mon_git' manquant).")
             return None
 
-        dir_path = os.path.join(".git", "objects", sha1[:2])
+        dir_path = os.path.join(".mon_git", "objects", sha1[:2])
         file_path = os.path.join(dir_path, sha1[2:])
         try:
             os.makedirs(dir_path, exist_ok=True)

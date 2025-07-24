@@ -1,6 +1,4 @@
 #!/usr/bin/env python3
-from gitBis import main
+import gitBis
 
-if __name__ == "__main__":
-    main()
-
+gitBis.main()

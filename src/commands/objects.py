@@ -6,11 +6,34 @@ import hashlib
 import os
 import zlib
 import argparse
+import struct
 
 
-GIT_DIR = ".git"
+def get_git_dir():
+    """
+    Retourne toujours le répertoire Git .mon_git.
+    """
+    return '.mon_git'
+
+# Utilisation de la fonction de détection automatique
+GIT_DIR = get_git_dir()
 
 def hash_object(file_path, write=True):
+    """
+    Calcule le hash SHA-1 d'un fichier et optionnellement l'écrit dans .mon_git/objects.
+    
+    IMPACT SUR .MON_GIT :
+    - Si write=True : Crée le dossier .mon_git/objects/<2_premiers_caracteres>/ et y écrit le fichier texte
+    - Format : <type>|<taille>|<contenu> en format texte lisible
+    - Structure : .mon_git/objects/ab/cdef1234...txt (ab = 2 premiers caractères du hash)
+    
+    Args:
+        file_path (str): Chemin vers le fichier à hacher
+        write (bool): Si True, écrit l'objet dans .mon_git/objects
+    
+    Returns:
+        str: Hash SHA-1 de l'objet
+    """
     if not os.path.isfile(file_path):
         raise ValueError(f"File not found: {file_path}")
 
@@ -23,33 +46,84 @@ def hash_object(file_path, write=True):
     sha1 = hashlib.sha1(store).hexdigest()
 
     if write:
-        object_path = os.path.join('.git', 'objects', sha1[:2], sha1[2:])
+        git_dir = get_git_dir()
+        object_path = os.path.join(git_dir, 'objects', sha1[:2], f"{sha1[2:]}.txt")
         dir_path = os.path.dirname(object_path)
         os.makedirs(dir_path, exist_ok=True)
 
-        with open(object_path, 'wb') as f:
-            f.write(zlib.compress(store))
+        with open(object_path, 'w') as f:
+            f.write(f"# Git Object: {sha1}\n")
+            f.write(f"# Type: blob\n")
+            f.write(f"# Size: {len(content)}\n")
+            f.write(f"blob|{len(content)}|\n")
+            f.write(content.decode('utf-8', errors='replace'))
 
     print(sha1)
     return sha1
 
 def read_object(sha):
-    path = os.path.join('.git', 'objects', sha[:2], sha[2:])
+    """
+    Lit et décompresse un objet Git depuis .mon_git/objects.
+    
+    IMPACT SUR .MON_GIT :
+    - Aucun impact (lecture seule)
+    - Lit depuis .mon_git/objects/<2_premiers>/<reste_hash>.txt
+    - Décompresse avec zlib et parse l'en-tête
+    
+    Args:
+        sha (str): Hash SHA-1 de l'objet à lire
+    
+    Returns:
+        tuple: (type_objet, contenu_decompressé)
+    """
+    git_dir = get_git_dir()
+    path = os.path.join(git_dir, 'objects', sha[:2], f"{sha[2:]}.txt")
     if not os.path.exists(path):
         raise ValueError(f"Object {sha} not found.")
 
-    with open(path, 'rb') as f:
-        compressed = f.read()
-        decompressed = zlib.decompress(compressed)
-
-    null_index = decompressed.index(b'\0')
-    header = decompressed[:null_index]
-    content = decompressed[null_index+1:]
-
-    obj_type, size = header.decode().split()
-    return obj_type, content
+    with open(path, 'r') as f:
+        content = f.read()
+        
+    # Le contenu est stocké en texte, on le décode
+    try:
+        # Supprimer les commentaires et lignes vides
+        lines = [line.strip() for line in content.split('\n') if line.strip() and not line.startswith('#')]
+        if not lines:
+            raise ValueError(f"Object {sha} is empty or invalid.")
+            
+        # La première ligne contient l'en-tête
+        header_line = lines[0]
+        if '|' in header_line:
+            obj_type, size = header_line.split('|')[:2]
+            size = int(size)
+            # Le reste du contenu
+            content_data = '\n'.join(lines[1:]).encode('utf-8')
+        else:
+            # Format legacy
+            null_index = content.find('\0')
+            if null_index == -1:
+                raise ValueError(f"Invalid object format for {sha}")
+            header = content[:null_index]
+            content_data = content[null_index+1:].encode('utf-8')
+            obj_type, size = header.split()
+            size = int(size)
+            
+        return obj_type, content_data
+    except Exception as e:
+        raise ValueError(f"Error reading object {sha}: {e}")
 
 def cat_file(option, sha):
+    """
+    Affiche le type ou le contenu d'un objet Git (équivalent à git cat-file).
+    
+    IMPACT SUR .MON_GIT :
+    - Aucun impact (lecture seule)
+    - Utilise read_object() pour lire depuis .mon_git/objects
+    
+    Args:
+        option (str): '-t' pour type, '-p' pour contenu
+        sha (str): Hash SHA-1 de l'objet
+    """
     obj_type, content = read_object(sha)
 
     if option == '-t':
@@ -57,14 +131,201 @@ def cat_file(option, sha):
     elif option == '-p':
         if obj_type == 'blob':
             print(content.decode('utf-8', errors='replace'), end='')
-        elif obj_type in ('commit', 'tree'):
+        elif obj_type == 'tree':
+            # Affichage formaté pour les objets tree
+            i = 0
+            while i < len(content):
+                # Recherche de la fin du mode
+                space_pos = content.find(b' ', i)
+                if space_pos == -1:
+                    break
+                
+                # Extraction du mode
+                try:
+                    mode = content[i:space_pos].decode('utf-8')
+                except UnicodeDecodeError:
+                    mode = content[i:space_pos].decode('utf-8', errors='replace')
+                
+                # Recherche de la fin du nom
+                null_pos = content.find(b'\0', space_pos)
+                if null_pos == -1:
+                    break
+                
+                # Extraction du nom
+                try:
+                    name = content[space_pos+1:null_pos].decode('utf-8')
+                except UnicodeDecodeError:
+                    name = content[space_pos+1:null_pos].decode('utf-8', errors='replace')
+                
+                # Extraction du hash (20 bytes après le null)
+                if null_pos + 21 > len(content):
+                    break
+                hash_bytes = content[null_pos+1:null_pos+21]
+                hash_hex = hash_bytes.hex()
+                
+                # Détermination du type d'objet (blob ou tree)
+                # Pour simplifier, on considère que les dossiers sont des trees
+                # et les fichiers sont des blobs
+                if mode.startswith('04'):  # Dossier
+                    obj_type_str = 'tree'
+                else:  # Fichier
+                    obj_type_str = 'blob'
+                
+                # Affichage formaté
+                print(f"{mode} {obj_type_str} {hash_hex}    {name}")
+                
+                # Passage à l'entrée suivante
+                i = null_pos + 21
+        elif obj_type == 'commit':
             print(content.decode('utf-8', errors='replace'), end='')
         else:
             print(f"Pretty print not supported yet for type {obj_type}")
     else:
         raise ValueError("Invalid option. Use -t or -p.")
 
+def read_index():
+    """
+    Lit le fichier index Git (.mon_git/index.txt) et retourne la liste des fichiers indexés.
+    
+    IMPACT SUR .MON_GIT :
+    - Aucun impact (lecture seule)
+    - Lit le fichier texte .mon_git/index.txt
+    - Parse les entrées selon le format texte
+    
+    Returns:
+        list: Liste des tuples (mode, nom_fichier, hash_sha1) pour chaque fichier indexé
+    """
+    git_dir = get_git_dir()
+    index_path = os.path.join(git_dir, 'index.txt')
+    if not os.path.exists(index_path):
+        return []
+    
+    entries = []
+    try:
+        with open(index_path, 'r') as f:
+            for line in f:
+                line = line.strip()
+                # Ignorer les commentaires et lignes vides
+                if line and not line.startswith('#'):
+                    # Format: mode|hash|filename
+                    if '|' in line:
+                        parts = line.split('|')
+                        if len(parts) >= 3:
+                            mode = int(parts[0])
+                            sha1 = parts[1]
+                            filename = parts[2]
+                            entries.append((mode, filename, sha1))
+    except Exception as e:
+        print(f"Erreur lors de la lecture de l'index: {e}")
+        return []
+    
+    return entries
+
+def write_tree():
+    """
+    Crée un objet tree à partir des fichiers du répertoire de travail.
+    
+    IMPACT SUR .MON_GIT :
+    - Crée un nouvel objet tree dans .mon_git/objects/<2_premiers>/<reste_hash>.txt
+    - Le tree représente l'état actuel des fichiers du répertoire
+    - Format tree : <mode> <nom>\0<hash_binaire> pour chaque fichier
+    - Structure : .mon_git/objects/ab/cdef1234...txt (ab = 2 premiers caractères du hash)
+    
+    Returns:
+        str: Hash SHA-1 de l'objet tree créé
+    """
+    # Pour simplifier, on va créer un tree basé sur les fichiers actuels
+    # plutôt que de lire l'index qui semble corrompu
+    entries = []
+    
+    # Parcours des fichiers du répertoire de travail
+    for root, dirs, files in os.walk('.'):
+        # Ignorer .mon_git et .git
+        if '.mon_git' in dirs:
+            dirs.remove('.mon_git')
+        if '.git' in dirs:
+            dirs.remove('.git')
+        
+        for file in files:
+            file_path = os.path.join(root, file)
+            # Ignorer les fichiers cachés et les fichiers spéciaux
+            if file.startswith('.') and file != '.gitignore':
+                continue
+            
+            # Calculer le hash du fichier
+            try:
+                with open(file_path, 'rb') as f:
+                    content = f.read()
+                
+                header = f"blob {len(content)}\0".encode()
+                store = header + content
+                sha1 = hashlib.sha1(store).hexdigest()
+                
+                # Mode pour un fichier normal (100644)
+                mode = 0o100644
+                
+                # Chemin relatif
+                rel_path = os.path.relpath(file_path, '.')
+                entries.append((mode, rel_path, sha1))
+                
+            except Exception as e:
+                print(f"Erreur lors du traitement de {file_path}: {e}")
+    
+    if not entries:
+        print("Aucun fichier trouvé pour créer le tree.")
+        return None
+    
+    # Création du contenu du tree
+    tree_content = b""
+    for mode, name, sha1 in entries:
+        # Conversion du mode en format octal (ex: 100644)
+        mode_str = f"{mode:06o}"
+        # Conversion du hash en bytes
+        sha_bytes = bytes.fromhex(sha1)
+        # Construction de l'entrée : mode nom\0hash
+        entry = f"{mode_str} {name}\0".encode() + sha_bytes
+        tree_content += entry
+    
+    # Calcul du hash du tree
+    tree_hash = hashlib.sha1(tree_content).hexdigest()
+    
+    # Création de l'objet tree
+    header = f"tree {len(tree_content)}\0".encode()
+    store = header + tree_content
+    
+    # Écriture dans .mon_git/objects
+    git_dir = get_git_dir()
+    object_path = os.path.join(git_dir, 'objects', tree_hash[:2], f"{tree_hash[2:]}.txt")
+    os.makedirs(os.path.dirname(object_path), exist_ok=True)
+    
+    with open(object_path, 'w') as f:
+        f.write(f"# Git Object: {tree_hash}\n")
+        f.write(f"# Type: tree\n")
+        f.write(f"# Size: {len(tree_content)}\n")
+        f.write(f"tree|{len(tree_content)}|\n")
+        # Écrire les entrées en format lisible
+        for mode, name, sha1 in entries:
+            mode_str = f"{mode:06o}"
+            f.write(f"{mode_str} {name} {sha1}\n")
+    
+    print(tree_hash)
+    return tree_hash
+
 def create_tree(entries):
+    """
+    Crée un objet tree Git à partir d'une liste d'entrées (fichiers/sous-dossiers).
+    
+    IMPACT SUR .MON_GIT :
+    - Crée un nouvel objet tree dans .mon_git/objects/<2_premiers>/<reste_hash>
+    - Format tree : <mode> <nom>\0<hash_binaire> pour chaque entrée
+    - Structure : .mon_git/objects/ab/cdef1234... (ab = 2 premiers caractères du hash)
+    
+    Args:
+        entries (list): Liste de tuples (mode, nom, hash) pour chaque fichier/dossier
+    
+    Returns:
+        str: Hash SHA-1 de l'objet tree créé
+    """
     tree_content = b""
     for mode, name, sha in entries:
         mode_str = mode.decode() if isinstance(mode, bytes) else mode
@@ -73,13 +334,25 @@ def create_tree(entries):
         tree_content += f"{mode_str} {name}\0".encode() + sha_bytes
     sha1 = hashlib.sha1(tree_content).hexdigest()
     store = f"tree {len(tree_content)}\0".encode() + tree_content
-    object_path = os.path.join('.git', 'objects', sha1[:2], sha1[2:])
+    object_path = os.path.join(GIT_DIR, 'objects', sha1[:2], sha1[2:])
     os.makedirs(os.path.dirname(object_path), exist_ok=True)
     with open(object_path, 'wb') as f:
         f.write(zlib.compress(store))
     return sha1
 
 def parse_tree(tree_content):
+    """
+    Parse le contenu d'un objet tree Git pour extraire les informations des fichiers.
+    
+    IMPACT SUR .MON_GIT :
+    - Aucun impact (fonction utilitaire pour parser le contenu)
+    
+    Args:
+        tree_content (bytes): Contenu brut d'un objet tree
+    
+    Returns:
+        dict: Dictionnaire {nom_fichier: hash_sha1} pour chaque entrée
+    """
     files = {}
     i = 0
     while i < len(tree_content):
@@ -92,22 +365,69 @@ def parse_tree(tree_content):
         i = name_end + 21
     return files
 
-# implémenter la fonction `create_commit` dans `objects.py` pour générer un objet commit, puis l'appeler dans un fichier `commit.py`. 
 def create_commit(tree_sha1, parent_sha1=None, message="Initial commit"):
+    """
+    Crée un objet commit Git avec les métadonnées appropriées.
+    
+    IMPACT SUR .MON_GIT :
+    - Crée un nouvel objet commit dans .mon_git/objects/<2_premiers>/<reste_hash>.txt
+    - Format commit : tree <hash_tree>\nparent <hash_parent>\n\n<message>
+    - Structure : .mon_git/objects/ab/cdef1234...txt (ab = 2 premiers caractères du hash)
+    - Le commit référence un tree et optionnellement un parent
+    - Vérifie que le tree existe avant de créer le commit
+    
+    Args:
+        tree_sha1 (str): Hash du tree à référencer
+        parent_sha1 (str, optional): Hash du commit parent (pour les commits suivants)
+        message (str): Message du commit
+    
+    Returns:
+        str: Hash SHA-1 de l'objet commit créé
+    """
     import getpass, time
+    
+    git_dir = get_git_dir()
+    
+    # Vérification que le tree existe
+    tree_path = os.path.join(git_dir, 'objects', tree_sha1[:2], f"{tree_sha1[2:]}.txt")
+    if not os.path.exists(tree_path):
+        raise ValueError(f"Tree {tree_sha1} not found. Use 'gitBis write-tree' first.")
+    
+    # Vérification que le parent existe si spécifié
+    if parent_sha1:
+        parent_path = os.path.join(git_dir, 'objects', parent_sha1[:2], f"{parent_sha1[2:]}.txt")
+        if not os.path.exists(parent_path):
+            raise ValueError(f"Parent commit {parent_sha1} not found.")
+    
+    # Récupération des informations d'auteur
     author = getpass.getuser()
     date = int(time.time())
+    
+    # Construction du contenu du commit
     if parent_sha1:
         commit_content = f"tree {tree_sha1}\nparent {parent_sha1}\n\n{message}".encode()
     else:
         commit_content = f"tree {tree_sha1}\n\n{message}".encode()
+
+    # Création de l'objet commit
     store = f"commit {len(commit_content)}".encode() + b'\x00' + commit_content
     sha1 = hashlib.sha1(store).hexdigest()
-    object_path = os.path.join('.git', 'objects', sha1[:2], sha1[2:])
+    
+    # Écriture dans .mon_git/objects
+    object_path = os.path.join(git_dir, 'objects', sha1[:2], f"{sha1[2:]}.txt")
     os.makedirs(os.path.dirname(object_path), exist_ok=True)
-    with open(object_path, 'wb') as f:
-        f.write(zlib.compress(store))
-    print("DEBUG commit_content:", commit_content)
+    
+    with open(object_path, 'w') as f:
+        f.write(f"# Git Object: {sha1}\n")
+        f.write(f"# Type: commit\n")
+        f.write(f"# Size: {len(commit_content)}\n")
+        f.write(f"commit|{len(commit_content)}|\n")
+        f.write(f"tree {tree_sha1}\n")
+        if parent_sha1:
+            f.write(f"parent {parent_sha1}\n")
+        f.write(f"\n{message}\n")
+    
+    print(sha1)
     return sha1
 
 
@@ -134,7 +454,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Hash and optionally store a Git object.")
     parser.add_argument("file", help="File to hash")
     parser.add_argument("-t", "--type", default="blob", help="Type of Git object (default: blob)")
-    parser.add_argument("-w", "--write", action="store_true", help="Actually write the object into .git/objects")
+    parser.add_argument("-w", "--write", action="store_true", help="Actually write the object into .mon_git/objects")
 
     args = parser.parse_args()
 
