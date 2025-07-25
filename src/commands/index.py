@@ -3,7 +3,7 @@
 import os
 import json
 from . import create_tree, hash_object
-INDEX_PATH = '.git/index'
+INDEX_PATH = '.mon_git/index'
 
 
 def read_index():

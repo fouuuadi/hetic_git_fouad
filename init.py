@@ -1,6 +1,6 @@
 import os
 
-GIT_DIR = ".git"
+GIT_DIR = ".mon_git"
 
 
 def init():

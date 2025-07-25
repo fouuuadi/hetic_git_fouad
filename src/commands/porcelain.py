@@ -4,13 +4,13 @@ import os
 
 
 def init_repo(path='.'):
-    git_dir = os.path.join(path, '.git')
+    git_dir = os.path.join(path, '.mon_git')
     
     if os.path.exists(git_dir):
         print(f"Repository already initialized in {git_dir}")
         return
 
-    #je crée la structure de dossier .git/
+    #je crée la structure de dossier .mon_git/
     os.makedirs(os.path.join(git_dir, 'objects'))
     os.makedirs(os.path.join(git_dir, 'refs', 'heads'))
 

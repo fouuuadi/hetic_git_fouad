@@ -1,15 +1,15 @@
 
-# Cette fonction lit un objet Git (blob) à partir du répertoire `.git/objects` 
+# Cette fonction lit un objet Git (blob) à partir du répertoire `.mon_git/objects` 
 # avec gestion des erreurs et vérification de la validité du SHA-1.
 import os
 import sys
 import zlib
 
-GIT_DIR = ".git"
+GIT_DIR = ".mon_git"
 
 def cat_file(sha1):
     """
-    Lit un objet Git à partir du répertoire .git/objects et affiche son contenu.
+    Lit un objet Git à partir du répertoire .mon_git/objects et affiche son contenu.
     :param sha1: SHA-1 de l'objet Git à lire.
     """
     # Vérification de la longueur du SHA-1

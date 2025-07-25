@@ -104,27 +104,36 @@ def main():
         print("❌ Échec du statut")
         return
     
-    # Test 7: Hash d'un fichier
+    # Test 7: Gestion des fichiers .gitignore
     print("\n" + "="*60)
-    print("🎯 TEST 7: HASH D'UN FICHIER")
+    print("🎯 TEST 7: GESTION DES FICHIERS .GITIGNORE")
+    print("="*60)
+    success = run_command("gitBis gitignore '*.log'", "Ajout d'un pattern au fichier .gitignore")
+    if not success:
+        print("❌ Échec de l'ajout au .gitignore")
+        return
+    
+    # Test 8: Hash d'un fichier
+    print("\n" + "="*60)
+    print("🎯 TEST 8: HASH D'UN FICHIER")
     print("="*60)
     success = run_command("gitBis hash-object fichier1.txt", "Calcul du hash d'un fichier")
     if not success:
         print("❌ Échec du hash")
         return
     
-    # Test 8: Hash et écriture d'un fichier
+    # Test 9: Hash et écriture d'un fichier
     print("\n" + "="*60)
-    print("🎯 TEST 8: HASH ET ÉCRITURE D'UN FICHIER")
+    print("🎯 TEST 9: HASH ET ÉCRITURE D'UN FICHIER")
     print("="*60)
     success = run_command("gitBis hash-object fichier1.txt -w", "Hash et écriture d'un fichier")
     if not success:
         print("❌ Échec du hash et écriture")
         return
     
-    # Test 9: Affichage du type d'un objet
+    # Test 10: Affichage du type d'un objet
     print("\n" + "="*60)
-    print("🎯 TEST 9: AFFICHAGE DU TYPE D'UN OBJET")
+    print("🎯 TEST 10: AFFICHAGE DU TYPE D'UN OBJET")
     print("="*60)
     # On récupère d'abord le hash du fichier
     print("🔍 Récupération du hash du fichier...")
@@ -139,27 +148,27 @@ def main():
             print("❌ Échec de l'affichage du type")
             return
         
-        # Test 10: Affichage du contenu d'un objet
+        # Test 11: Affichage du contenu d'un objet
         print("\n" + "="*60)
-        print("🎯 TEST 10: AFFICHAGE DU CONTENU D'UN OBJET")
+        print("🎯 TEST 11: AFFICHAGE DU CONTENU D'UN OBJET")
         print("="*60)
         success = run_command(f"gitBis cat-file -p {hash_value}", f"Affichage du contenu de l'objet {hash_value}")
         if not success:
             print("❌ Échec de l'affichage du contenu")
             return
     
-    # Test 11: Création d'un tree
+    # Test 12: Création d'un tree
     print("\n" + "="*60)
-    print("🎯 TEST 11: CRÉATION D'UN TREE")
+    print("🎯 TEST 12: CRÉATION D'UN TREE")
     print("="*60)
     success = run_command("gitBis write-tree", "Création d'un objet tree")
     if not success:
         print("❌ Échec de la création du tree")
         return
     
-    # Test 12: Création d'un commit
+    # Test 13: Création d'un commit
     print("\n" + "="*60)
-    print("🎯 TEST 12: CRÉATION D'UN COMMIT")
+    print("🎯 TEST 13: CRÉATION D'UN COMMIT")
     print("="*60)
     # On récupère d'abord le hash du tree
     print("🔍 Récupération du hash du tree...")
@@ -172,9 +181,9 @@ def main():
             print("❌ Échec de la création du commit")
             return
         
-        # Test 13: Création d'un commit avec parent
+        # Test 14: Création d'un commit avec parent
         print("\n" + "="*60)
-        print("🎯 TEST 13: CRÉATION D'UN COMMIT AVEC PARENT")
+        print("🎯 TEST 14: CRÉATION D'UN COMMIT AVEC PARENT")
         print("="*60)
         print("🔍 Récupération du hash du commit parent...")
         result = subprocess.run(f"gitBis commit-tree {tree_hash} -m 'Premier commit'", shell=True, capture_output=True, text=True)
@@ -186,20 +195,62 @@ def main():
                 print("❌ Échec de la création du commit avec parent")
                 return
     
-    # Test 14: Réinitialisation (pour tester la suppression)
+    # Test 15: Commit via la commande porcelain
     print("\n" + "="*60)
-    print("🎯 TEST 14: RÉINITIALISATION DU DÉPÔT")
+    print("🎯 TEST 15: COMMIT VIA LA COMMANDE PORCELAIN")
     print("="*60)
-    success = run_command("gitBis init", "Réinitialisation du dépôt (suppression de l'ancien)")
+    success = run_command("gitBis commit -m 'Commit via commande porcelain'", "Création d'un commit avec la commande porcelain")
     if not success:
-        print("❌ Échec de la réinitialisation")
+        print("❌ Échec du commit porcelain")
+        return
+    
+    # Test 16: Convertir une référence en SHA-1
+    print("\n" + "="*60)
+    print("🎯 TEST 16: CONVERTIR UNE RÉFÉRENCE EN SHA-1")
+    print("="*60)
+    success = run_command("gitBis rev-parse HEAD", "Conversion de HEAD en SHA-1")
+    if not success:
+        print("❌ Échec de la conversion HEAD")
+        return
+    
+    success = run_command("gitBis rev-parse main", "Conversion de la branche main en SHA-1")
+    if not success:
+        print("❌ Échec de la conversion main")
+        return
+    
+    # Test 17: Afficher les références
+    print("\n" + "="*60)
+    print("🎯 TEST 17: AFFICHER LES RÉFÉRENCES")
+    print("="*60)
+    success = run_command("gitBis show-ref", "Affichage de toutes les références")
+    if not success:
+        print("❌ Échec de l'affichage des références")
+        return
+    
+    success = run_command("gitBis show-ref --heads", "Affichage des branches seulement")
+    if not success:
+        print("❌ Échec de l'affichage des branches")
+        return
+    
+    # Test 18: Afficher l'historique des commits
+    print("\n" + "="*60)
+    print("🎯 TEST 18: AFFICHER L'HISTORIQUE DES COMMITS")
+    print("="*60)
+    success = run_command("gitBis log --oneline", "Affichage de l'historique en format compact")
+    if not success:
+        print("❌ Échec de l'affichage de l'historique")
+        return
+    
+    success = run_command("gitBis log", "Affichage de l'historique détaillé")
+    if not success:
+        print("❌ Échec de l'affichage de l'historique détaillé")
         return
     
     print("\n" + "="*60)
     print("🎉 TOUS LES TESTS TERMINÉS AVEC SUCCÈS")
     print("="*60)
     print("📊 RÉSUMÉ:")
-    print("   ✅ 14 tests exécutés")
+    print("   ✅ 18 tests exécutés")
     print("   ✅ Toutes les commandes fonctionnent")
     print("   ✅ Système Git simplifié opérationnel")
     print("="*60)

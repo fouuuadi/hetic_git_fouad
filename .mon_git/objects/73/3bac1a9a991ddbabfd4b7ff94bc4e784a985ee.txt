@@ -1,8 +1,0 @@
-# Git Object: 733bac1a9a991ddbabfd4b7ff94bc4e784a985ee
-# Type: commit
-# Size: 111
-commit|111|
-tree f488425646eb6ee2acfa82d92ebc08f80baa9589
-parent ea64289b26ddf65f57b181dfdc5220d635339da8
-
-Deuxième commit

@@ -1,5 +1,0 @@
-# Git Object: de17363cf9ec08f5e2e1a6217231df107dba2f4b
-# Type: blob
-# Size: 21
-blob|21|
-Contenu du fichier 2

@@ -4,7 +4,7 @@ fichier realiser par fouad
 
 ## 📊 ÉTAT D'AVANCEMENT - COMMANDES INTÉGRÉES ET TESTÉES ✅
 
-**9 commandes sur 17 intégrées et fonctionnelles :**
+**13 commandes sur 17 intégrées et fonctionnelles :**
 
 1. ✅ **Initialiser un dépôt** - `gitBis init`
 2. ✅ **Ajouter un fichier au staging** - `gitBis add`
@@ -14,10 +14,14 @@ fichier realiser par fouad
 6. ✅ **Afficher un objet Git** - `gitBis cat-file`
 7. ✅ **Générer un arbre (tree) depuis l'index** - `gitBis write-tree`
 8. ✅ **Créer un commit** - `gitBis commit-tree`
-9. ✅ **Lister les fichiers suivis** - `gitBis ls-files`
+9. ✅ **Commit via la commande porcelain** - `gitBis commit`
+10. ✅ **Lister les fichiers suivis** - `gitBis ls-files`
+11. ✅ **Convertir une référence en SHA-1** - `gitBis rev-parse`
+12. ✅ **Afficher les références** - `gitBis show-ref`
+13. ✅ **Afficher l'historique des commits** - `gitBis log`
 
 **Tests validés :** Toutes les commandes ont été testées individuellement et fonctionnent parfaitement.
-**Progression :** 53% des commandes du plan d'intégration sont opérationnelles.
+**Progression :** 76% des commandes du plan d'intégration sont opérationnelles.
 
 ---
 

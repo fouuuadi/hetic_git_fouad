@@ -4,8 +4,8 @@ from . import read_object, parse_tree
 
 
 def checkout(ref, new_branch=False):
-    head_path = os.path.join('.git', 'HEAD')
-    refs_heads = os.path.join('.git', 'refs', 'heads')
+    head_path = os.path.join('.mon_git', 'HEAD')
+    refs_heads = os.path.join('.mon_git', 'refs', 'heads')
     branch_path = os.path.join(refs_heads, ref)
 
     if new_branch:
@@ -13,7 +13,7 @@ def checkout(ref, new_branch=False):
             head_ref = f.read().strip()
         if head_ref.startswith('ref:'):
             current_branch = head_ref.split(' ')[1]
-            with open(os.path.join('.git', current_branch), 'r') as f:
+            with open(os.path.join('.mon_git', current_branch), 'r') as f:
                 sha = f.read().strip()
         else:
             sha = head_ref
@@ -41,9 +41,9 @@ def checkout(ref, new_branch=False):
     obj_type, tree_content = read_object(tree_sha)
     files_dict = parse_tree(tree_content)
 
-    # Suppression brutale du working dir (hors .git)
+    # Suppression brutale du working dir (hors .mon_git)
     for fname in os.listdir('.'):
-        if fname != '.git':
+        if fname != '.mon_git':
             if os.path.isfile(fname):
                 os.remove(fname)
             elif os.path.isdir(fname):
