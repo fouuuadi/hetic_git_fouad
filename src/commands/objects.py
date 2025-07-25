@@ -271,11 +271,7 @@ def write_tree():
             except Exception as e:
                 print(f"Erreur lors du traitement de {file_path}: {e}")
     
-    if not entries:
-        print("Aucun fichier trouvé pour créer le tree.")
-        return None
-    
-    # Création du contenu du tree
+    # Création du contenu du tree (même vide)
     tree_content = b""
     for mode, name, sha1 in entries:
         # Conversion du mode en format octal (ex: 100644)
@@ -307,6 +303,9 @@ def write_tree():
         for mode, name, sha1 in entries:
             mode_str = f"{mode:06o}"
             f.write(f"{mode_str} {name} {sha1}\n")
+    
+    if not entries:
+        print("Aucun fichier trouvé pour créer le tree.")
     
     print(tree_hash)
     return tree_hash
@@ -365,7 +364,7 @@ def parse_tree(tree_content):
         i = name_end + 21
     return files
 
-def create_commit(tree_sha1, parent_sha1=None, message="Initial commit"):
+def create_commit(tree_sha1, parent_sha1=None, parent_sha2=None, message="Initial commit"):
     """
     Crée un objet commit Git avec les métadonnées appropriées.
     
@@ -373,12 +372,13 @@ def create_commit(tree_sha1, parent_sha1=None, message="Initial commit"):
     - Crée un nouvel objet commit dans .mon_git/objects/<2_premiers>/<reste_hash>.txt
     - Format commit : tree <hash_tree>\nparent <hash_parent>\n\n<message>
     - Structure : .mon_git/objects/ab/cdef1234...txt (ab = 2 premiers caractères du hash)
-    - Le commit référence un tree et optionnellement un parent
+    - Le commit référence un tree et optionnellement un ou deux parents
     - Vérifie que le tree existe avant de créer le commit
     
     Args:
         tree_sha1 (str): Hash du tree à référencer
-        parent_sha1 (str, optional): Hash du commit parent (pour les commits suivants)
+        parent_sha1 (str, optional): Hash du premier commit parent
+        parent_sha2 (str, optional): Hash du deuxième commit parent (pour les merges)
         message (str): Message du commit
     
     Returns:
@@ -393,21 +393,32 @@ def create_commit(tree_sha1, parent_sha1=None, message="Initial commit"):
     if not os.path.exists(tree_path):
         raise ValueError(f"Tree {tree_sha1} not found. Use 'gitBis write-tree' first.")
     
-    # Vérification que le parent existe si spécifié
+    # Vérification que les parents existent si spécifiés
     if parent_sha1:
         parent_path = os.path.join(git_dir, 'objects', parent_sha1[:2], f"{parent_sha1[2:]}.txt")
         if not os.path.exists(parent_path):
             raise ValueError(f"Parent commit {parent_sha1} not found.")
+    
+    if parent_sha2:
+        parent_path = os.path.join(git_dir, 'objects', parent_sha2[:2], f"{parent_sha2[2:]}.txt")
+        if not os.path.exists(parent_path):
+            raise ValueError(f"Parent commit {parent_sha2} not found.")
     
     # Récupération des informations d'auteur
     author = getpass.getuser()
     date = int(time.time())
     
     # Construction du contenu du commit
+    commit_lines = [f"tree {tree_sha1}"]
+    
     if parent_sha1:
-        commit_content = f"tree {tree_sha1}\nparent {parent_sha1}\n\n{message}".encode()
-    else:
-        commit_content = f"tree {tree_sha1}\n\n{message}".encode()
+        commit_lines.append(f"parent {parent_sha1}")
+    
+    if parent_sha2:
+        commit_lines.append(f"parent {parent_sha2}")
+    
+    commit_lines.extend(["", message])
+    commit_content = "\n".join(commit_lines).encode()
 
     # Création de l'objet commit
     store = f"commit {len(commit_content)}".encode() + b'\x00' + commit_content
@@ -425,6 +436,8 @@ def create_commit(tree_sha1, parent_sha1=None, message="Initial commit"):
         f.write(f"tree {tree_sha1}\n")
         if parent_sha1:
             f.write(f"parent {parent_sha1}\n")
+        if parent_sha2:
+            f.write(f"parent {parent_sha2}\n")
         f.write(f"\n{message}\n")
     
     print(sha1)

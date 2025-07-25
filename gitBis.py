@@ -8,6 +8,10 @@ from src.commands.gitignore import read_gitignore
 from src.commands.rev_parse import rev_parse
 from src.commands.show_ref import show_refs
 from src.commands.log import show_log
+from src.commands.ls_tree import show_tree
+from src.commands.checkout import checkout
+from src.commands.reset import reset
+import sys
 
 def create_gitignore(pattern):
     """Crée ou met à jour le fichier .gitignore avec un pattern"""
@@ -134,6 +138,24 @@ def main():
     parser_log.add_argument("-n", "--max-count", type=int, help="Limiter le nombre de commits")
     parser_log.add_argument("commit", nargs="?", default="HEAD", help="Commit de départ (par défaut: HEAD)")
 
+    # Sous-commande : ls-tree
+    parser_ls_tree = subparsers.add_parser("ls-tree", help="Afficher le contenu d'un objet tree")
+    parser_ls_tree.add_argument("tree_sha", help="Hash du tree à afficher")
+    parser_ls_tree.add_argument("-l", "--long", action="store_true", help="Afficher les longs formats")
+
+    # Sous-commande : checkout
+    parser_checkout = subparsers.add_parser("checkout", help="Basculer de branche ou créer une branche")
+    parser_checkout.add_argument("-b", action="store_true", help="Créer et basculer vers une nouvelle branche")
+    parser_checkout.add_argument("target", help="Branche, commit ou nouvelle branche")
+    parser_checkout.add_argument("start_point", nargs="?", default="HEAD", help="Point de départ pour la nouvelle branche")
+
+    # Sous-commande : reset
+    parser_reset = subparsers.add_parser("reset", help="Réinitialiser HEAD et/ou l'index")
+    parser_reset.add_argument("--soft", action="store_true", help="Réinitialiser seulement HEAD")
+    parser_reset.add_argument("--mixed", action="store_true", help="Réinitialiser HEAD et l'index (défaut)")
+    parser_reset.add_argument("--hard", action="store_true", help="Réinitialiser HEAD, l'index et le working directory")
+    parser_reset.add_argument("commit", help="Commit vers lequel réinitialiser")
+
     args = parser.parse_args()
 
     if args.command == "init":
@@ -203,7 +225,33 @@ def main():
             print(f"Erreur: {e}")
     elif args.command == "log":
         try:
-            show_log(start_ref=args.commit, oneline=args.oneline, max_count=args.max_count)
+            show_log(start_ref=args.commit, oneline=args.oneline, limit=args.max_count)
+        except Exception as e:
+            print(f"Erreur: {e}")
+    elif args.command == "ls-tree":
+        try:
+            show_tree(args.tree_sha, long_format=args.long)
+        except Exception as e:
+            print(f"Erreur: {e}")
+    elif args.command == "checkout":
+        try:
+            success = checkout(args.target, args.b, args.start_point)
+            if not success:
+                sys.exit(1)
+        except Exception as e:
+            print(f"Erreur: {e}")
+    elif args.command == "reset":
+        try:
+            # Déterminer le mode de reset
+            mode = "mixed"  # Mode par défaut
+            if args.soft:
+                mode = "soft"
+            elif args.hard:
+                mode = "hard"
+            
+            success = reset(args.commit, mode)
+            if not success:
+                sys.exit(1)
         except Exception as e:
             print(f"Erreur: {e}")
     else:

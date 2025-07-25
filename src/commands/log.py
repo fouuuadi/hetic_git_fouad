@@ -34,7 +34,7 @@ def read_commit_object(commit_sha):
     try:
         result = read_object(commit_sha)
         if not result or len(result) != 2 or result[0] != 'commit':
-            return None
+            raise ValueError(f"Invalid commit object: {commit_sha}")
         
         content = result[1].decode('utf-8') if isinstance(result[1], bytes) else result[1]
         
@@ -42,6 +42,7 @@ def read_commit_object(commit_sha):
         commit_info = {
             'tree': None,
             'parent': None,
+            'parents': [],  # Liste pour gérer les parents multiples
             'author': None,
             'committer': None,
             'message': []
@@ -52,7 +53,11 @@ def read_commit_object(commit_sha):
             if line.startswith('tree '):
                 commit_info['tree'] = line[5:]
             elif line.startswith('parent '):
-                commit_info['parent'] = line[7:]  # Corriger l'index
+                parent_sha = line[7:]  # Corriger l'index
+                commit_info['parents'].append(parent_sha)
+                # Pour la compatibilité, garder le premier parent dans 'parent'
+                if commit_info['parent'] is None:
+                    commit_info['parent'] = parent_sha
             elif line.startswith('author '):
                 commit_info['author'] = line[7:]
             elif line.startswith('committer '):
@@ -66,9 +71,12 @@ def read_commit_object(commit_sha):
                     if clean_line:
                         commit_info['message'].append(clean_line)
         
+        # Convertir la liste de messages en une seule chaîne
+        commit_info['message'] = '\n'.join(commit_info['message'])
+        
         return commit_info
-    except Exception:
-        return None
+    except Exception as e:
+        raise Exception(f"Error reading commit object {commit_sha}: {str(e)}")
 
 
 def format_commit_line(commit_sha, commit_info, oneline=False):
@@ -86,7 +94,7 @@ def format_commit_line(commit_sha, commit_info, oneline=False):
     short_sha = commit_sha[:7]
     
     if oneline:
-        message = commit_info['message'][0] if commit_info['message'] else "No message"
+        message = commit_info['message'] if commit_info['message'] else "No message"
         return f"{short_sha} {message}"
     else:
         # Format détaillé
@@ -105,7 +113,7 @@ def format_commit_line(commit_sha, commit_info, oneline=False):
         lines.append("")
         
         if commit_info['message']:
-            lines.extend(commit_info['message'])
+            lines.extend(commit_info['message'].split('\n')) # Split the message into lines
         
         lines.append("")
         return "\n".join(lines)
@@ -148,25 +156,34 @@ def get_commit_history(start_ref="HEAD", max_count=None):
     return commits
 
 
-def show_log(start_ref="HEAD", oneline=False, max_count=None):
+def show_log(start_ref="HEAD", oneline=False, limit=None):
     """
     Affiche l'historique des commits
     
     Args:
         start_ref (str): Référence de départ
         oneline (bool): Format compact
-        max_count (int): Nombre maximum de commits
+        limit (int): Nombre maximum de commits
+    
+    Returns:
+        bool: True si succès, False si échec
     """
-    commits = get_commit_history(start_ref, max_count)
-    
-    if not commits:
-        print("Aucun commit trouvé.")
-        return
-    
-    for commit_sha in commits:
-        commit_info = read_commit_object(commit_sha)
-        if commit_info:
-            print(format_commit_line(commit_sha, commit_info, oneline))
+    try:
+        commits = get_commit_history(start_ref, limit)
+        
+        if not commits:
+            print("Aucun commit trouvé.")
+            return True
+        
+        for commit_sha in commits:
+            commit_info = read_commit_object(commit_sha)
+            if commit_info:
+                print(format_commit_line(commit_sha, commit_info, oneline))
+        
+        return True
+    except Exception as e:
+        print(f"Erreur lors de l'affichage du log: {e}")
+        return False
 
 
 def main():

@@ -1,5 +1,0 @@
-# Git Object: eeeb21840d942368440c41386cf0930ad869f7e7
-# Type: blob
-# Size: 18
-blob|18|
-Deuxième fichier

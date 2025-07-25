@@ -1,0 +1,7 @@
+# Git Object: 80a8557351fbd07572c5d07883828263ee522ece
+# Type: commit
+# Size: 76
+commit|76|
+tree aafcc04864510438f482e313452681dc98b5782a
+
+Commit via commande porcelain

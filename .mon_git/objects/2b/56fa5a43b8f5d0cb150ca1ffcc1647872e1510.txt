@@ -1,5 +1,0 @@
-# Git Object: 2b56fa5a43b8f5d0cb150ca1ffcc1647872e1510
-# Type: blob
-# Size: 16
-blob|16|
-Premier fichier

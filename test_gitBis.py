@@ -246,11 +246,99 @@ def main():
         print("❌ Échec de l'affichage de l'historique détaillé")
         return
     
+    # Test 19: Lister le contenu d'un tree
+    print("\n" + "="*60)
+    print("🎯 TEST 19: LISTER LE CONTENU D'UN TREE")
+    print("="*60)
+    # Récupérer le hash du tree
+    print("🔍 Récupération du hash du tree...")
+    result = subprocess.run("gitBis write-tree", shell=True, capture_output=True, text=True)
+    if result.returncode == 0:
+        tree_hash = result.stdout.strip()
+        print(f"🌳 Hash du tree récupéré: {tree_hash}")
+        success = run_command(f"gitBis ls-tree {tree_hash}", f"Affichage du contenu du tree {tree_hash}")
+        if not success:
+            print("❌ Échec de l'affichage du tree")
+            return
+        
+        # Test avec un objet blob (erreur attendue)
+        print("🔍 Test avec un objet blob (erreur attendue)...")
+        result = subprocess.run("gitBis hash-object test.txt", shell=True, capture_output=True, text=True)
+        if result.returncode == 0:
+            blob_hash = result.stdout.strip().split()[-1]
+            print(f"📄 Hash du blob récupéré: {blob_hash}")
+            success = run_command(f"gitBis ls-tree {blob_hash}", f"Test avec un objet blob {blob_hash}")
+            # Ce test doit échouer car un blob n'est pas un tree
+            if success:
+                print("⚠️  Test inattendu: ls-tree avec un blob a réussi")
+            else:
+                print("✅ Test réussi: ls-tree avec un blob a échoué comme attendu")
+    
+    # Test 20: Basculer de branche ou créer une branche
+    print("\n" + "="*60)
+    print("🎯 TEST 20: BASCULER DE BRANCHE OU CRÉER UNE BRANCHE")
+    print("="*60)
+    success = run_command("gitBis checkout main", "Basculement vers la branche main")
+    if not success:
+        print("❌ Échec du basculement vers main")
+        return
+    
+    success = run_command("gitBis checkout -b feature", "Création et basculement vers une nouvelle branche")
+    if not success:
+        print("❌ Échec de la création de branche")
+        return
+    
+    # Récupérer un commit pour tester le checkout vers un commit
+    print("🔍 Récupération d'un commit pour tester checkout...")
+    result = subprocess.run("gitBis rev-parse HEAD", shell=True, capture_output=True, text=True)
+    if result.returncode == 0:
+        commit_hash = result.stdout.strip()
+        print(f"📄 Hash du commit récupéré: {commit_hash}")
+        success = run_command(f"gitBis checkout {commit_hash[:7]}", f"Checkout vers un commit spécifique {commit_hash[:7]}")
+        if not success:
+            print("❌ Échec du checkout vers un commit")
+            return
+        
+        # Retourner à la branche feature
+        success = run_command("gitBis checkout feature", "Retour vers la branche feature")
+        if not success:
+            print("❌ Échec du retour vers feature")
+            return
+    
+    # Test 21: Réinitialiser HEAD et/ou l'index
+    print("\n" + "="*60)
+    print("🎯 TEST 21: RÉINITIALISER HEAD ET/OU L'INDEX")
+    print("="*60)
+    # Récupérer un commit pour tester le reset
+    print("🔍 Récupération d'un commit pour tester reset...")
+    result = subprocess.run("gitBis rev-parse HEAD", shell=True, capture_output=True, text=True)
+    if result.returncode == 0:
+        commit_hash = result.stdout.strip()
+        print(f"📄 Hash du commit récupéré: {commit_hash}")
+        
+        # Test reset soft
+        success = run_command(f"gitBis reset --soft {commit_hash[:7]}", f"Reset soft vers {commit_hash[:7]}")
+        if not success:
+            print("❌ Échec du reset soft")
+            return
+        
+        # Test reset mixed
+        success = run_command(f"gitBis reset --mixed {commit_hash[:7]}", f"Reset mixed vers {commit_hash[:7]}")
+        if not success:
+            print("❌ Échec du reset mixed")
+            return
+        
+        # Test reset hard
+        success = run_command(f"gitBis reset --hard {commit_hash[:7]}", f"Reset hard vers {commit_hash[:7]}")
+        if not success:
+            print("❌ Échec du reset hard")
+            return
+    
     print("\n" + "="*60)
     print("🎉 TOUS LES TESTS TERMINÉS AVEC SUCCÈS")
     print("="*60)
     print("📊 RÉSUMÉ:")
-    print("   ✅ 18 tests exécutés")
+    print("   ✅ 21 tests exécutés")
     print("   ✅ Toutes les commandes fonctionnent")
     print("   ✅ Système Git simplifié opérationnel")
     print("="*60)
