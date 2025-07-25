@@ -1,6 +1,24 @@
-# Plan d’intégration des commandes Git
+# Plan d'intégration des commandes Git
 
 fichier realiser par fouad 
+
+## 📊 ÉTAT D'AVANCEMENT - COMMANDES INTÉGRÉES ET TESTÉES ✅
+
+**8 commandes sur 17 intégrées et fonctionnelles :**
+
+1. ✅ **Initialiser un dépôt** - `gitBis init`
+2. ✅ **Ajouter un fichier au staging** - `gitBis add`
+3. ✅ **Vérifier l'état du dépôt** - `gitBis status`
+4. ✅ **Créer un blob et calculer son SHA-1** - `gitBis hash-object`
+5. ✅ **Afficher un objet Git** - `gitBis cat-file`
+6. ✅ **Générer un arbre (tree) depuis l'index** - `gitBis write-tree`
+7. ✅ **Créer un commit** - `gitBis commit-tree`
+8. ✅ **Lister les fichiers suivis** - `gitBis ls-files`
+
+**Tests validés :** Toutes les commandes ont été testées individuellement et fonctionnent parfaitement.
+**Progression :** 47% des commandes du plan d'intégration sont opérationnelles.
+
+---
 
 Ce document liste, étape par étape, les commandes Git à intégrer successivement pour comprendre et tester les différentes fonctionnalités de Git.
 
