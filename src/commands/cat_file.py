@@ -1,3 +1,4 @@
+
 # Cette fonction lit un objet Git (blob) à partir du répertoire `.git/objects` 
 # avec gestion des erreurs et vérification de la validité du SHA-1.
 import os

@@ -14,8 +14,3 @@ if __name__ == "__main__":
         print(f"SHA-1 de l'objet tree créé : {sha1}")
     else:
         print("Échec de la création de l'objet tree.")
-
-
-
-
-
