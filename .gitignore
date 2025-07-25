@@ -1,15 +1,1 @@
-<<<<<<< HEAD
-__pycache__/
-*.pyc
-*.pyo
 *.log
-.venv/
-.git/
-test.txt
-=======
-*.log
-*.log
-*.tmp
-*.pyc
-__pycache__/
->>>>>>> efbd81f (commande integre 8/17)

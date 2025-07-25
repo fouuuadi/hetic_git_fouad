@@ -1,6 +1,7 @@
 # Git Index File
 # Version: 2
-# Number of entries: 2
+# Number of entries: 3
 # Format: mode|hash|filename
 100644|ce649040340046c62fe24b231043349ff5e5f37e|fichier1.txt
 100644|de17363cf9ec08f5e2e1a6217231df107dba2f4b|fichier2.txt
+100644|397b4a7624e35fa60563a9c03b1213d93f7b6546|.gitignore

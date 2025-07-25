@@ -1,0 +1,5 @@
+# Git Object: 397b4a7624e35fa60563a9c03b1213d93f7b6546
+# Type: blob
+# Size: 6
+blob|6|
+*.log

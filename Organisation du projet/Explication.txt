@@ -1,0 +1,7 @@
+Pour ce projet, nous avons utilisé Trello pour l’organisation.
+
+Pendant la première semaine, nous avons attribué des tâches à chaque personne (commandes Git).
+Chacun a réalisé quelques commandes : Oscar, Modestin, Amine et Fouad.
+
+Lors de la dernière séance, nous avons terminé les dernières commandes à faire.
+Ensuite, Fouad a rassemblé l’ensemble du code de chaque membre du groupe.

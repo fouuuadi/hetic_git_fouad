@@ -4,6 +4,18 @@ from src.commands.init import init
 from src.commands.add import add_files, ls_files
 from src.commands.status import git_status
 from src.commands.objects import cat_file, write_tree, create_commit
+from src.commands.gitignore import read_gitignore
+
+def create_gitignore(pattern):
+    """Crée ou met à jour le fichier .gitignore avec un pattern"""
+    try:
+        with open('.gitignore', 'a') as f:
+            f.write(f"{pattern}\n")
+        print(f"Pattern '{pattern}' ajouté au fichier .gitignore")
+        return True
+    except Exception as e:
+        print(f"Erreur lors de la création/modification de .gitignore: {e}")
+        return False
 
 def main():
     parser = argparse.ArgumentParser(prog="gitBis", description="Mini Git en python", epilog="Merci d'utiliser gitBis !")
@@ -22,6 +34,10 @@ def main():
 
     # Sous-commande : status
     parser_status = subparsers.add_parser("status", help="Afficher l'état du dépôt")
+
+    # Sous-commande : gitignore
+    parser_gitignore = subparsers.add_parser("gitignore", help="Gérer les fichiers .gitignore")
+    parser_gitignore.add_argument("pattern", help="Pattern à ajouter au fichier .gitignore")
 
     # Sous-commande : cat-file
     parser_cat_file = subparsers.add_parser("cat-file", help="Afficher le contenu d'un objet Git")
@@ -53,6 +69,8 @@ def main():
         ls_files(verbose=args.verbose)
     elif args.command == "status":
         git_status()
+    elif args.command == "gitignore":
+        create_gitignore(args.pattern)
     elif args.command == "cat-file":
         try:
             if args.t:
